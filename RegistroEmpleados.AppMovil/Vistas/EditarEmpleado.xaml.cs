@@ -57,8 +57,56 @@ public partial class EditarEmpleado : ContentPage
         }
     }
 
-    private void ActualizarButton_Clicked(object sender, EventArgs e)
+    private async void ActualizarButton_Clicked(object sender, EventArgs e)
     {
+        try
+        {
+            if(string.IsNullOrWhiteSpace(EditPrimerNombreEntry.Text)||
+                    string.IsNullOrWhiteSpace(EditSegundoNombreEntry.Text) ||
+                    string.IsNullOrWhiteSpace(EditPrimerApellidoEntry.Text)||
+                    string.IsNullOrWhiteSpace(EditSegundoApellidoEntry.Text) ||
+                    string.IsNullOrWhiteSpace(EditCorreoEntry.Text)||
+                    string.IsNullOrWhiteSpace(EditSueldoEntry.Text) ||
+                    EditCargoPicker.SelectedItem == null
+                    )
+            {
+                await DisplayAlert("Error", "Todos los Campos son obligatorios", "OK");
+                return;
+            }
 
+            if (!EditCorreoEntry.Text.Contains("@"))
+            {
+                await DisplayAlert("Error", "El correo electrónico no es válido", "OK");
+                return;
+            }
+            
+            if(!int.TryParse(EditSueldoEntry.Text, out var sueldo))
+            {
+                await DisplayAlert("Error", "El sueldo no es un número válido", "OK");
+                return;
+            }
+
+            if(sueldo <= 0)
+            {
+                await DisplayAlert("Error", "El sueldo debe ser mayor o igual a cero", "OK");
+                return;
+            }
+            empleadoActual.Id = empleadoId;
+            empleadoActual.PrimerNombre = EditPrimerNombreEntry.Text.Trim();
+            empleadoActual.SegundoNombre = EditSegundoNombreEntry.Text.Trim();
+            empleadoActual.PrimerApellido = EditPrimerApellidoEntry.Text.Trim();
+            empleadoActual.SegundoApellido = EditSegundoApellidoEntry.Text.Trim();
+            empleadoActual.CorreoElectronico = EditCorreoEntry.Text.Trim();
+            empleadoActual.Sueldo = sueldo;
+            empleadoActual.Cargo = new Cargo { Nombre = EditCargoPicker.SelectedItem.ToString()};
+            empleadoActual.Estado = editEstadoSwitch.IsToggled;
+             await client.Child("Empleados").Child(empleadoActual.Id).PatchAsync(empleadoActual);
+            await DisplayAlert("Éxito", "El empleado se ha modificado de manera correcta", "OK");
+            await Navigation.PopAsync();
+        }
+        catch(Exception)
+        {
+            throw;
+        }
     }
 }
